@@ -5,6 +5,8 @@
  * Copyright 2011, Joe Lambert.
  * Free to use under the MIT license.
  * http://www.opensource.org/licenses/mit-license.php
+ *
+ *
  */
 
 // Flux namespace
@@ -41,6 +43,7 @@ window.flux = {
 			captions: false,
 			width: null,
 			height: null,
+			onTransitionStart: null,
 			onTransitionEnd: null
 		}, opts);
 
@@ -144,6 +147,19 @@ window.flux = {
 		}
 		
 		// Catch when a transition has finished
+		this.element.bind('fluxTransitionStart', function(event, data) {
+			// If the slider is currently playing then set the timeout for the next transition
+			// if(_this.isPlaying())
+			// 	_this.start();
+			
+			// Are we using a callback instead of events for notifying about transition ends?
+			if(_this.options.onTransitionStart) {					
+				event.preventDefault();
+				_this.options.onTransitionStart(data);
+			}
+		});
+		
+		// Catch when a transition has finished
 		this.element.bind('fluxTransitionEnd', function(event, data) {
 			// If the slider is currently playing then set the timeout for the next transition
 			// if(_this.isPlaying())
@@ -180,6 +196,7 @@ window.flux = {
 		constructor: flux.slider,
 		playing: false,
 		start: function() {
+
 			var _this = this;
 			this.playing = true;
 			this.interval = setInterval(function() {
@@ -273,7 +290,8 @@ window.flux = {
 
 			this.container.css({
 				width: this.width+'px',
-				height: this.height+(this.options.pagination?this.pagination.height():0)+'px'
+				height: this.height+'px'
+				//height: this.height+(this.options.pagination?this.pagination.height():0)+'px' <== change this line for unfixed the slider height
 			});
 			
 			// Should we add prev/next controls?
@@ -378,6 +396,10 @@ window.flux = {
 			}
 		},
 		transition: function(transition, opts) {
+
+			// Trigger an event to signal the end of a transition
+			this.element.trigger('fluxTransitionStart');
+
 			// Allow a transition to be picked from ALL available transitions (not just the reduced set)
 	        if(transition == undefined || !flux.transitions[transition])
 	        {
@@ -625,6 +647,7 @@ window.flux = {
 		constructor: flux.transition,
 		hasFinished: false, // This is a lock to ensure that the fluxTransitionEnd event is only fired once per tansition
 		run: function() {
+
 			var _this = this;
 
 			// do something
